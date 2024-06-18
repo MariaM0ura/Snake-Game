@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root{
+    overflow: hidden;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    outline: none;
+}
+
+body{
+    background-color: #000d36;
+    color: white
+}
+
+#canvas{
+    background-color: #fff;
+    margin-left: 50%;
+    margin-top: 1%;
+    transform: translateX(-50%);
+}
+
+#controls {
+    position: absolute;
+    top: 48%;
+    left: 12%;
+    display: flex;
+    flex-direction: column;
+}
+
+#reset, #show-grid, .pause-active{
+    display: flex;
+    justify-content: center;
+    background-color: #000d36;
+    color: #cccccc;
+    border-radius: 25px;
+    width: 120px;
+    padding: 12px;
+    margin-top: 18px;
+    box-shadow: 0 0 3px lightgreen;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: box-shadow 0.3s;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px lightseagreen;
+
+}
+
+.pause-not-active{
+    background-color: rgba(239, 239, 240, .4);
+    box-shadow: none;
+    color: #cccccc;
+    border-radius: 25px;
+    width: 120px;
+    padding: 12px;
+    margin-top: 18px;
+    box-shadow: none;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: box-shadow 0.3s;
+    text-transform: uppercase;
+    text-shadow: none;
+}
+
+#reset:hover, #show-grid:hover, .pause-active:hover{
+    box-shadow: 0 0 8px lightgreen;
+    color: yellowgreen;
+    cursor: pointer;
+}
+
