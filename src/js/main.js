@@ -74,6 +74,86 @@
 		ctx.stroke();
 	}
 
+	const head = {
+		x: 2,
+		y: 1,
+		color: randomColor(),
+		vx:0,
+		vy: 0,
+		draw: () => {
+			ctx.fillStyle = head.color;
+			ctx.shadowColor = head.color;
+			ctx.shadowBlur = 2.5;
+			ctx.fillRect(
+				head.x * cellSize + pGrind, 
+				head.y * cellSize + pGrind,
+				cellSize,
+				 cellSize);
+		},
+	};
+
+	let tailLength = 4;
+	let snakeParts = [];
+
+	//the snake
+	class Tail {
+		color = "#42f5e3";
+		constructor(x, y) {
+			this.x = x;
+			this.y = y;
+		}
+
+		draw() {
+			ctx.fillStyle = this.color;
+			ctx.shadowColor = this.color;
+			ctx.shadowBlur = 2.5;
+			ctx.fillRect(
+				this.x * cellSize + pGrind,
+				this.y * cellSize + pGrind,
+				cellSize,
+				cellSize
+			);
+		}
+	}
+
+	//the food
+	const food = {
+		x: 5,
+		y: 5,
+		color: "#ff3131",
+		draw: () => {
+			ctx.fillStyle = food.color;
+			ctx.shadowColor = food.color;
+			ctx.shadowBlur = 2.5;
+			ctx.fillRect(
+				food.x * cellSize + pGrind,
+				food.y * cellSize + pGrind,
+				cellSize,
+				cellSize
+			);
+		},
+	};
+
+	const drawSnake = () => {
+		snakeParts.forEach((part) => {
+			part.draw();
+		});
+
+		snakeParts.push(new Tail(head.x, head.y));
+		if(snakeParts.length > tailLength) {
+			snakeParts.shift();
+		}
+
+		head.color = randomColor;
+		head.draw();
+	}
+
+	const updareSnakePosition = () => {
+		head.x += head.vx;
+		head.y += head.vy;
+	
+	}
+
 	let showGrid = false;
 
 	const togglegrid = () => {
@@ -92,14 +172,97 @@
 
 	const animate = () => {
 		setCanvas();
-		drawGrid();
+		if(!showGrid)drawGrid();
+		drawSnake();
+		if(gameActive){
+			updareSnakePosition();
+			if(isGameOver()) {
+				showGameOver();
+				gameActive = false;
+			}
+		}
+			food.draw();
 		setScore();
 		setTimeout(animate, 1000 / frameReset);
 
 	}
 
+	const foodPosition = () => {
+		let foodCollision = false;
+		snakeParts.forEach((part) => {
+			if(part.x === food.x && part.y === food.y) {
+				foodCollision = true;
+			}
+		})
+
+		if(foodCollision) {
+			food.x = Math.floor(Math.random() * cellCount);
+			food.y = Math.floor(Math.random() * cellCount);
+			score++;
+			tailLength++;
+		}
+	}
+
+	const gameOver = () => {
+		let gameOver = false;
+
+		snakeParts.forEach((part) => {
+			if(part.x === head.x && part.y === head.y) {
+				gameOver = true;
+			}
+		});
+
+		if( head.x < 0 || 
+			head.y < 0 ||
+			head.x > cellCount - 1 || 
+			head.y > cellCount - 1) 
+			{
+			gameOver = true;
+			}
+		return gameOver;
+	}
+
+	const showGameOver = () => {
+		const text = document.getElementById('div');
+		text.setAttribute('id', 'game_over');
+		text.innerHTML = 'Game Over';
+		const body = document.querySelector('body');
+		body.appendChild(text);
+ 	}
+
+	const changeDir = (e) => {
+		let key = e.keyCode;
+	
+		// Set directions based on WASD or arrow keys
+		if (key === 68 || key === 39) { // D or right arrow
+			if (head.vx === -1) return; // Prevent reversing
+			head.vx = 1;
+			head.vy = 0;
+		}
+	
+		if (key === 65 || key === 37) { // A or left arrow
+			if (head.vx === 1) return;
+			head.vx = -1;
+			head.vy = 0;
+		}
+	
+		if (key === 87 || key === 38) { // W or up arrow
+			if (head.vy === 1) return;
+			head.vy = -1;
+			head.vx = 0;
+		}
+	
+		if (key === 83 || key === 40) { // S or down arrow
+			if (head.vy === -1) return;
+			head.vy = 1;
+			head.vx = 0;
+		}
+	}
+	
+
 	showGridEl.addEventListener('click', togglegrid);
 	resetEl.addEventListener('click', resetGame);
+	addEventListener('keydown', changeDir);
 
 	animate();
 })();
