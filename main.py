@@ -19,7 +19,8 @@ class Snake:
         self.allowedLength = 150        # total allowed length 
         self.previousHead = [0, 0]      # previous head 
 
-        self.imgFood = cv2.imread(pathFood, cv2.IMREAD_UNCHANGED)
+        #self.imgFood = cv2.imread(pathFood, cv2.IMREAD_UNCHANGED)
+        self.imgFood = pathFood
         self.imgFood = cv2.resize(self.imgFood, (80,80))
         self.hFood, self.wFood, _ = self.imgFood.shape
         self.foodPoint = [0, 0]
@@ -36,9 +37,24 @@ class Snake:
 
     def update(self, imgMain, currentHead):
         if self.gamerOver:
-            imgMain = np.zeros_like(imgMain)
-            cv2.putText(imgMain, "Game Over", (200, 400), cv2.FONT_HERSHEY_COMPLEX, 5, (0, 0, 255), 6)
-            cv2.putText(imgMain, f"Score: {self.score}", (300, 500), cv2.FONT_HERSHEY_COMPLEX, 2, (0, 0, 255), 4)
+            imgMain[:] = (30, 30, 30)  
+            overlay = imgMain.copy()
+            cv2.rectangle(overlay, (150, 350), (850, 600), (0, 0, 255), -1)  # Retângulo vermelho
+            alpha = 0.6  
+            cv2.addWeighted(overlay, alpha, imgMain, 1 - alpha, 0, imgMain)
+
+            text = "Game Over"
+            score_text = f"Score: {self.score}"
+            
+            cv2.putText(imgMain, text, (180, 450), cv2.FONT_HERSHEY_COMPLEX, 5, (0, 0, 0), 10)
+            cv2.putText(imgMain, text, (180, 450), cv2.FONT_HERSHEY_COMPLEX, 5, (255, 255, 255), 6)
+
+            cv2.putText(imgMain, score_text, (280, 550), cv2.FONT_HERSHEY_COMPLEX, 2, (0, 0, 0), 6)
+            cv2.putText(imgMain, score_text, (280, 550), cv2.FONT_HERSHEY_COMPLEX, 2, (255, 255, 255), 4)
+
+            restart_text = "Press SPACE or ENTER to Restart"
+            cv2.putText(imgMain, restart_text, (180, 650), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+
         else:
             px, py = self.previousHead 
             cx, cy = currentHead
@@ -64,8 +80,9 @@ class Snake:
             if self.points:
                 for i, point in enumerate(self.points):
                     if i != 0:
-                        cv2.line(imgMain, self.points[i-1], self.points[i], (0, 0, 255), 20)
-                cv2.circle(imgMain, self.points[-1], 15, (0, 255, 0), cv2.FILLED)
+                        cv2.line(imgMain, self.points[i-1], self.points[i], (51, 196, 164), 20)
+                cv2.circle(imgMain, self.points[-1], 15, (51, 196, 164), cv2.FILLED)
+
 
 
             # Draw Food
@@ -85,7 +102,7 @@ class Snake:
             # Check the Collision
             pts = np.array(self.points[:-2], np.int32)
             pts = pts.reshape((-1, 1, 2))
-            cv2.polylines(imgMain, [pts], False, (0, 200, 0), thickness=3)
+            cv2.polylines(imgMain, [pts], False, (51, 196, 164), thickness=3)
             minDistance = cv2.pointPolygonTest(pts, (cx, cy), True)
 
             if -1 <= minDistance <= 1:
@@ -99,11 +116,17 @@ class Snake:
                 self.randomFoodLocation()
         
 
-
         return imgMain
 
-game = Snake("apple.png")
 
+
+marker_img = cv2.imread("src/public/snake.png", cv2.IMREAD_UNCHANGED)
+marker_img = cv2.resize(marker_img, (60, 60))
+marker_height, marker_width, _ = marker_img.shape
+
+apple_img = cv2.imread("src/public/apple.png", cv2.IMREAD_UNCHANGED)
+
+game = Snake(apple_img)
 
 while True:
     sucess, img =  cap.read()
@@ -115,9 +138,18 @@ while True:
         pointIndex = lmList[8][0:2]
 
         img = game.update(img, pointIndex)
-        cv2.circle(img, pointIndex, 15, (200, 0, 200), cv2.FILLED)
+        x, y = pointIndex
+        y1, y2 = max(0, y - marker_height // 2), min(img.shape[0], y + marker_height // 2)
+        x1, x2 = max(0, x - marker_width // 2), min(img.shape[1], x + marker_width // 2)
 
+        marker_resized = cv2.resize(marker_img, (x2 - x1, y2 - y1))
 
+        alpha_marker = marker_resized[:, :, 3] / 255.0
+        for c in range(3):
+            img[y1:y2, x1:x2, c] = (
+                img[y1:y2, x1:x2, c] * (1 - alpha_marker) + marker_resized[:, :, c] * alpha_marker
+            )
+        
     cv2.imshow("Snake Game", img)
     key = cv2.waitKey(1)
     if key == 32 or key == 13:
